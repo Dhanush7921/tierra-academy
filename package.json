@@ -1,0 +1,55 @@
+{
+  "name": "tierra-academy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TIERRA ACADEMY — engineering learning platform by Tierra Automation. Learn. Build. Automate.",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "build:academy": "cross-env NEXT_PUBLIC_BASE_PATH=/academy next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:reset": "tsx scripts/migrate.ts --reset && tsx scripts/seed.ts",
+    "provision:super-admin": "tsx scripts/provision-super-admin.ts",
+    "media:samples": "bash scripts/generate-sample-media.sh",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:db": "vitest run tests/db",
+    "test:e2e": "playwright test",
+    "load:smoke": "k6 run load/k6/public-browse.js",
+    "load:local": "tsx load/node-load.ts"
+  },
+  "dependencies": {
+    "@zoom/meetingsdk": "^3.13.2",
+    "gsap": "^3.13.0",
+    "next": "^15.5.4",
+    "pdf-lib": "^1.17.1",
+    "postgres": "^3.4.7",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "three": "^0.180.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@playwright/test": "^1.55.0",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/node": "^22.18.0",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@types/three": "^0.180.0",
+    "cross-env": "^10.0.0",
+    "eslint": "^9.35.0",
+    "eslint-config-next": "^15.5.4",
+    "tailwindcss": "^4.1.13",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

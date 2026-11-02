@@ -1,0 +1,28 @@
+node_modules/
+.next/
+out/
+build/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+next-env.d.ts
+
+# env & secrets
+.env
+.env.local
+.env.*.local
+.env.production
+
+# runtime storage (uploaded videos/files in dev)
+storage/videos/
+storage/uploads/
+!storage/sample/
+
+# large reference videos stay out of git (frames are kept)
+design-references/videos/
+
+.DS_Store
+*.log
+.vercel
+.demo-credentials.local
