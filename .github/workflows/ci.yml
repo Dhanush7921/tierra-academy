@@ -17,7 +17,7 @@ jobs:
       DATABASE_URL: postgres://tierra:tierra_dev@localhost:5432/tierra_test
       DATABASE_URL_TEST: postgres://tierra:tierra_dev@localhost:5432/tierra_test
       SESSION_SECRET: ci-session-secret-ci-session-secret-1234567890
-      DEMO_USER_PASSWORD: TierraDemo#2026
+      DEMO_USER_PASSWORD: Ci-${{ github.run_id }}-${{ github.run_attempt }}#Tx
       APP_MODE: demo
       NEXT_PUBLIC_APP_URL: http://localhost:3000
     steps:

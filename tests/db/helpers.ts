@@ -6,7 +6,7 @@ import postgres from "postgres";
 
 export const TEST_DB = process.env.DATABASE_URL_TEST || "postgres://tierra:tierra_dev@127.0.0.1:5432/tierra_test";
 process.env.DATABASE_URL = TEST_DB;
-process.env.DEMO_USER_PASSWORD = process.env.DEMO_USER_PASSWORD || "TierraDemo#2026";
+process.env.DEMO_USER_PASSWORD = process.env.DEMO_USER_PASSWORD || `Local-${crypto.randomUUID()}#1`;
 process.env.PAYMENTS_PROVIDER = "demo";
 process.env.APP_MODE = "demo";
 process.env.SESSION_SECRET = "test-session-secret-0123456789abcdefghijklmnop";

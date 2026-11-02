@@ -45,7 +45,7 @@ cp .env.example .env.local            # defaults run fully in demo mode
 # 2. Database (local Postgres; the role needs CREATEROLE for the local auth shim)
 createdb tierra_academy
 npm run db:migrate
-DEMO_USER_PASSWORD='TierraDemo#2026' npm run db:seed   # demo content + demo accounts
+DEMO_USER_PASSWORD='<choose-a-strong-password>' npm run db:seed   # demo content + demo accounts
 npm run media:samples                   # optional: regenerates synthetic demo video clips
 
 # 3. Run

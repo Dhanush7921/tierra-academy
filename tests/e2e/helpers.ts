@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
-export const PW = process.env.DEMO_USER_PASSWORD || "TierraDemo#2026";
+export const PW = process.env.DEMO_USER_PASSWORD ?? "";
 export const USERS = {
   student: "student@demo.tierra.academy",
   student2: "student2@demo.tierra.academy",
