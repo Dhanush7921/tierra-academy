@@ -30,6 +30,12 @@ export function Lab3D({ courses, nextClass }: { courses: string[]; nextClass: st
   const handle = useRef<LabHandle | null>(null);
   const [mode, setMode] = useState<"pending" | "3d" | "grid">("pending");
   const [hover, setHover] = useState<HotspotKey | null>(null);
+  const [themeKey, setThemeKey] = useState(0);
+  useEffect(() => {
+    const on = () => setThemeKey((k) => k + 1); // rebuild the room with the new palette
+    window.addEventListener("ta:theme", on);
+    return () => window.removeEventListener("ta:theme", on);
+  }, []);
 
   useEffect(() => {
     if (window.matchMedia("(max-width: 639px)").matches) { setMode("grid"); return; }
@@ -57,7 +63,8 @@ export function Lab3D({ courses, nextClass }: { courses: string[]; nextClass: st
       setMode("3d");
     })();
     return () => { disposed = true; handle.current?.dispose(); handle.current = null; };
-  }, [reduced, router, courses, nextClass]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reduced, themeKey]);
 
   if (mode === "grid") {
     return (

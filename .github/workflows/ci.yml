@@ -1,0 +1,41 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: tierra, POSTGRES_PASSWORD: tierra_dev, POSTGRES_DB: tierra_test }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U tierra" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://tierra:tierra_dev@localhost:5432/tierra_test
+      DATABASE_URL_TEST: postgres://tierra:tierra_dev@localhost:5432/tierra_test
+      SESSION_SECRET: ci-session-secret-ci-session-secret-1234567890
+      DEMO_USER_PASSWORD: TierraDemo#2026
+      APP_MODE: demo
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test:unit
+      - run: npm run test:db
+      - run: npm run build
+      - name: E2E (Playwright)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run db:reset
+          npm run media:samples || true
+          npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: playwright-report, path: playwright-report }

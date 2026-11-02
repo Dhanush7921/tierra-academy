@@ -31,7 +31,7 @@ export function SiteHeader({ user }: { user: { name: string; isStaff: boolean } 
   return (
     <header className={cx("sticky top-0 z-40 transition-all duration-300", scrolled ? "glass-strong border-x-0 border-t-0" : "bg-transparent")}>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Logo />
+        <Logo textOnMobile={false} />
         <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
           {NAV.map((n) => (
             <Link key={n.href} href={n.href} aria-current={pathname.startsWith(n.href) ? "page" : undefined}
@@ -44,12 +44,12 @@ export function SiteHeader({ user }: { user: { name: string; isStaff: boolean } 
           <ThemeToggle />
           {user ? (
             <>
-              {user.isStaff && <Link href="/admin" className={buttonClass("ghost", "sm", "hidden sm:inline-flex")}>Admin</Link>}
+              {user.isStaff && <Link href="/admin" className={buttonClass("ghost", "sm", "max-sm:hidden")}>Admin</Link>}
               <Link href="/dashboard" className={buttonClass("primary", "sm")}>My lab</Link>
             </>
           ) : (
             <>
-              <Link href="/login" className={buttonClass("ghost", "sm", "hidden sm:inline-flex")}>Sign in</Link>
+              <Link href="/login" className={buttonClass("ghost", "sm", "max-sm:hidden")}>Sign in</Link>
               <Link href="/register" className={buttonClass("primary", "sm")}>Start learning</Link>
             </>
           )}

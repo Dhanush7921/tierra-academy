@@ -1,7 +1,12 @@
 export const TZ = "Asia/Kolkata";
 
+/** Prices: 0 → "Free". Use formatAmount for accounting figures. */
 export function formatMoney(paise: number, currency = "INR"): string {
   if (paise === 0) return "Free";
+  return formatAmount(paise, currency);
+}
+
+export function formatAmount(paise: number, currency = "INR"): string {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: paise % 100 === 0 ? 0 : 2 }).format(paise / 100);
 }
 
@@ -15,6 +20,7 @@ export const formatDateTime = (d: Date | string | null | undefined) =>
 
 export function formatDuration(seconds: number): string {
   if (!seconds) return "—";
+  if (seconds < 60) return `${seconds} sec`;
   const h = Math.floor(seconds / 3600);
   const m = Math.round((seconds % 3600) / 60);
   return h ? `${h}h ${m}m` : `${m} min`;

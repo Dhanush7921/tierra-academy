@@ -59,7 +59,7 @@ export function QuizRunner({ quizId, questions, disabled }: { quizId: string; qu
 export function AssignmentForm({ a }: { a: { id: string; allowText: boolean; allowLink: boolean; allowFile: boolean; maxFileMb: number; text: string; link: string; hasFile: boolean } }) {
   const [s, action] = useActionState<FormState, FormData>(submitAssignmentAction, undefined);
   return (
-    <form action={action} className="mt-4 space-y-3" encType="multipart/form-data">
+    <form action={action} className="mt-4 space-y-3">
       <input type="hidden" name="assignmentId" value={a.id} />
       {a.allowText && <Field label="Your answer" htmlFor={`t-${a.id}`}><Textarea id={`t-${a.id}`} name="text" defaultValue={a.text} rows={4} /></Field>}
       {a.allowLink && <Field label="Link (GitHub, drive, video…)" htmlFor={`l-${a.id}`} error={s?.errors?.link}><Input id={`l-${a.id}`} name="link" type="url" defaultValue={a.link} placeholder="https://" /></Field>}

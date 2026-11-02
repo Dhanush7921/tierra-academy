@@ -15,14 +15,14 @@ export function LogoMark({ size = 40, className }: { size?: number; className?: 
   );
 }
 
-export function Logo({ href = "/", compact = false }: { href?: string; compact?: boolean }) {
+export function Logo({ href = "/", compact = false, textOnMobile = true }: { href?: string; compact?: boolean; textOnMobile?: boolean }) {
   return (
     <Link href={href} className="group inline-flex items-center gap-3" aria-label="Tierra Academy home">
       <LogoMark size={compact ? 34 : 40} />
       {!compact && (
-        <span className="leading-none">
-          <span className="block font-display text-[15px] font-bold tracking-[0.12em]">TIERRA <span className="text-gradient">ACADEMY</span></span>
-          <span className="mt-1 block font-mono text-[10px] tracking-[0.22em] text-muted">LEARN · BUILD · AUTOMATE</span>
+        <span className={cx("leading-none", !textOnMobile && "max-[459px]:hidden")}>
+          <span className="block whitespace-nowrap font-display text-[14px] font-bold tracking-[0.1em]">TIERRA <span className="text-gradient">ACADEMY</span></span>
+          <span className="mt-1 block whitespace-nowrap font-mono text-[9px] tracking-[0.2em] text-muted">LEARN · BUILD · AUTOMATE</span>
         </span>
       )}
     </Link>

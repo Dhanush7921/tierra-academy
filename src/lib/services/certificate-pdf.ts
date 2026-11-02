@@ -16,7 +16,7 @@ export async function renderCertificatePdf(c: { recipient_name: string; course_t
   const sansBold = await doc.embedFont(StandardFonts.HelveticaBold);
   const orange = rgb(1, 0.478, 0), amber = rgb(1, 0.702, 0), navy = rgb(0.043, 0.071, 0.125), muted = rgb(0.38, 0.42, 0.5);
 
-  page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(0.992, 0.984, 0.965) });
+  page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(1, 1, 1) });
   page.drawRectangle({ x: 22, y: 22, width: W - 44, height: H - 44, borderColor: orange, borderWidth: 3 });
   page.drawRectangle({ x: 32, y: 32, width: W - 64, height: H - 64, borderColor: amber, borderWidth: 0.8 });
   for (let i = 0; i < 14; i++) page.drawLine({ start: { x: 32, y: 120 + i * 8 }, end: { x: 32 + 60 - i * 4, y: 120 + i * 8 }, thickness: 0.6, color: amber, opacity: 0.6 });

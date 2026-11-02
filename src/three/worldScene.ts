@@ -290,6 +290,7 @@ export function mountWorld(canvas: HTMLCanvasElement, opts: { lowPower: boolean;
   core.add(coreBase, crystal, coreGlow, coreLabel);
   scene.add(core);
 
+  const labels: THREE.Sprite[] = [coreLabel];
   const stations: { group: THREE.Group; pos: THREE.Vector3; update: Updater; hit: THREE.Mesh; ring: THREE.Mesh; dir: THREE.Vector3 }[] = [];
   STATIONS.forEach((s, i) => {
     const a = (i / STATIONS.length) * Math.PI * 2 - Math.PI / 2;
@@ -302,6 +303,7 @@ export function mountWorld(canvas: HTMLCanvasElement, opts: { lowPower: boolean;
     const [content, update] = BUILDERS[i]();
     group.add(content);
     const label = labelSprite(s.name, `#${s.accent.toString(16).padStart(6, "0")}`, 1.15);
+    labels.push(label);
     label.position.y = 5.2;
     group.add(label);
     const hit = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.4, 5, 16), new THREE.MeshBasicMaterial({ visible: false }));
@@ -329,7 +331,7 @@ export function mountWorld(canvas: HTMLCanvasElement, opts: { lowPower: boolean;
   let target = 0;
   const camPos = overview.pos.clone();
   const camLook = overview.look.clone();
-  const tmpP = new THREE.Vector3(), tmpL = new THREE.Vector3();
+  const tmpP = new THREE.Vector3(), tmpL = new THREE.Vector3(), tmpW = new THREE.Vector3();
   let narrow = false;
   stage.onResize((w, h) => { narrow = w / h < 0.9; });
 
@@ -374,6 +376,11 @@ export function mountWorld(canvas: HTMLCanvasElement, opts: { lowPower: boolean;
     crystal.rotation.y = t * 0.6;
     crystal.position.y = 2.2 + Math.sin(t * 1.2) * 0.15;
     data.userData.update(t, 0.04);
+    // fade floating labels that are too close to the camera (keeps close-ups clean)
+    for (const l of labels) {
+      l.getWorldPosition(tmpW);
+      (l.material as THREE.SpriteMaterial).opacity = smooth(9, 15, camera.position.distanceTo(tmpW));
+    }
     const active = Math.round(progress * (keys.length - 1)) - 1;
     stations.forEach((s, i) => {
       s.update(t);

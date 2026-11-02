@@ -94,7 +94,11 @@ export type WebhookOutcome = { status: 200 | 400; body: string };
  *  3. apply the state change in one transaction, validating amount and currency against the order
  */
 export async function processPaymentWebhook(providerName: ProviderName, rawBody: string, signature: string | null, eventIdHeader: string | null): Promise<WebhookOutcome> {
-  const provider = providerName === "demo" ? new DemoPaymentProvider(env().DEMO_PAYMENT_WEBHOOK_SECRET) : paymentProvider("razorpay");
+  const e = env();
+  // verification needs only the webhook secret; an unconfigured provider can never produce a valid signature
+  const provider = providerName === "demo"
+    ? new DemoPaymentProvider(e.DEMO_PAYMENT_WEBHOOK_SECRET)
+    : new RazorpayProvider(e.RAZORPAY_KEY_ID, e.RAZORPAY_KEY_SECRET, e.RAZORPAY_WEBHOOK_SECRET);
   if (!provider.verifyWebhookSignature(rawBody, signature)) return { status: 400, body: "invalid signature" };
   let evt: NormalizedPaymentEvent;
   try {

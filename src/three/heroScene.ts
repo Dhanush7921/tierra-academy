@@ -83,8 +83,8 @@ export function mountHero(canvas: HTMLCanvasElement, opts: { reducedMotion: bool
   let shiftX = 0;
   stage.onResize((w, h) => {
     const aspect = w / h;
-    baseDist = aspect < 0.8 ? 22 : aspect < 1.2 ? 17 : 15;
-    shiftX = aspect > 1.3 ? -1.7 : 0; // leave room for the headline on wide screens
+    baseDist = aspect < 0.8 ? 22 : aspect < 1.2 ? 17 : 16;
+    shiftX = aspect > 1.3 ? -3.4 : 0; // leave room for the headline on wide screens
   });
 
   const pointer = new THREE.Vector2();

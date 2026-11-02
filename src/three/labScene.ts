@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { addStudioLights, createStage } from "./core";
+import { addStudioLights, createStage, themeIsLight } from "./core";
 import { capacitor, esp32Board, glow, mat, qfpChip, robotArm, textTexture } from "./parts";
 
 /**
@@ -37,13 +37,14 @@ export function mountLab(
 
   const room = new THREE.Group();
   scene.add(room);
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(14, 0.4, 11), new THREE.MeshStandardMaterial({ color: 0x10172a, roughness: 0.9, metalness: 0.05, envMapIntensity: 0.25 }));
+  const light = themeIsLight();
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(14, 0.4, 11), new THREE.MeshStandardMaterial({ color: light ? 0xe9e4da : 0x10172a, roughness: 0.9, metalness: 0.05, envMapIntensity: 0.25 }));
   floor.position.y = -0.2;
-  const tiles = new THREE.GridHelper(14, 14, 0xff7a00, 0x2a3550);
+  const tiles = new THREE.GridHelper(14, 14, 0xff7a00, light ? 0xc9c0b0 : 0x2a3550);
   (tiles.material as THREE.Material).transparent = true;
   (tiles.material as THREE.Material).opacity = 0.35;
   tiles.position.y = 0.01;
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0x141c2e, roughness: 0.9 });
+  const wallMat = new THREE.MeshStandardMaterial({ color: light ? 0xf6f2ea : 0x141c2e, roughness: 0.9, envMapIntensity: light ? 0.6 : 1 });
   const back = new THREE.Mesh(new THREE.BoxGeometry(14, 6, 0.3), wallMat);
   back.position.set(0, 3, -5.5);
   const side = new THREE.Mesh(new THREE.BoxGeometry(0.3, 6, 11), wallMat);

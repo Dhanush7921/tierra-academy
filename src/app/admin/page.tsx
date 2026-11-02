@@ -5,7 +5,7 @@ import { adminOverview } from "@/lib/services/analytics";
 import { Flash, type SP } from "./Flash";
 import { Alert, Card, EmptyState, PageHeader, StatCard, StatusBadge, buttonClass } from "@/components/ui/primitives";
 import { AreaChart, BarChart, Donut } from "@/components/ui/charts";
-import { formatMoney, relativeTime } from "@/lib/format";
+import { formatAmount as formatMoney, relativeTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Admin overview" };
 

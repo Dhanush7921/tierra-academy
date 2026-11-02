@@ -56,6 +56,9 @@ export function Hero() {
         {mode === "static" && <div className="absolute inset-y-0 right-0 flex w-full items-center justify-center md:w-3/5"><BoardIllustration className="w-[min(92%,640px)] opacity-90" /></div>}
       </div>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-bg to-transparent" />
+      {/* readability fade behind the headline on wide screens; on small screens the scene sits behind a soft veil */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 -z-10 hidden w-[52%] bg-gradient-to-r from-bg via-[color-mix(in_srgb,var(--bg)_75%,transparent)] to-transparent md:block" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[color-mix(in_srgb,var(--bg)_55%,transparent)] md:hidden" />
 
       <div className="mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-center px-4 pb-24 pt-10 sm:px-6">
         <div className="max-w-xl">

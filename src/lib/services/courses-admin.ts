@@ -1,5 +1,5 @@
 import { revalidateTag } from "next/cache";
-import { asService, asUser, type Tx } from "@/lib/db/client";
+import { asService, asUser } from "@/lib/db/client";
 import { audit } from "@/lib/services/audit";
 import { notify, notifySuperAdmins } from "@/lib/services/notifications";
 import { slugify } from "@/lib/format";

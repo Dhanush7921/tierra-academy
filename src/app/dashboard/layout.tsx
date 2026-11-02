@@ -27,7 +27,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
     <AppShell nav={nav} user={{ name: user.fullName, email: user.email }} roleLabel="Student" logout={logoutAction} home="/dashboard"
       topRight={
         <>
-          <Link href="/courses" className={buttonClass("ghost", "sm", "hidden sm:inline-flex")}><Icon name="search" size={16} />Browse courses</Link>
+          <Link href="/courses" className={buttonClass("ghost", "sm", "max-sm:hidden")}><Icon name="search" size={16} />Browse courses</Link>
           {can(user.roles, "admin.access") && <Link href="/admin" className={buttonClass("outline", "sm")}>Admin panel</Link>}
           <Link href="/dashboard/notifications" className="relative grid size-10 place-items-center rounded-xl hover:bg-surface-2" aria-label={`Notifications (${unread} unread)`}>
             <Icon name="bell" />{(unread as number) > 0 && <span className="absolute right-2 top-2 size-2 rounded-full bg-brand" />}

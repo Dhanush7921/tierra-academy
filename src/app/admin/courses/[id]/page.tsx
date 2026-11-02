@@ -82,7 +82,7 @@ export default async function CourseEditor({ params, searchParams }: { params: P
 
       {tab === "details" && (
         <Card className="p-6">
-          <form action={B(A.updateCourseAction, id)} className="grid gap-4 md:grid-cols-2" encType="multipart/form-data">
+          <form action={B(A.updateCourseAction, id)} className="grid gap-4 md:grid-cols-2">
             <Field label="Title" htmlFor="title" className="md:col-span-2"><Input id="title" name="title" defaultValue={c.title as string} required /></Field>
             <Field label="Subtitle" htmlFor="subtitle" className="md:col-span-2"><Input id="subtitle" name="subtitle" defaultValue={c.subtitle as string} /></Field>
             <Field label="Description" htmlFor="description" className="md:col-span-2"><Textarea id="description" name="description" defaultValue={c.description as string} rows={6} /></Field>
@@ -130,7 +130,7 @@ export default async function CourseEditor({ params, searchParams }: { params: P
                         {l.is_preview && <Badge tone="info">preview</Badge>}{l.video_asset_id ? <Badge tone="ok">video</Badge> : l.kind === "VIDEO" ? <Badge tone="warn">no video</Badge> : null}
                         <span className="text-xs text-muted">{formatDuration(l.duration_seconds as number)}</span>
                       </summary>
-                      <form action={B(A.updateLessonAction, id, l.id)} className="grid gap-3 border-t border-line p-4 md:grid-cols-2" encType="multipart/form-data">
+                      <form action={B(A.updateLessonAction, id, l.id)} className="grid gap-3 border-t border-line p-4 md:grid-cols-2">
                         <Field label="Title" htmlFor={`lt-${l.id}`}><Input id={`lt-${l.id}`} name="title" defaultValue={l.title as string} /></Field>
                         <Field label="Type" htmlFor={`lk-${l.id}`}><Select id={`lk-${l.id}`} name="kind" defaultValue={l.kind as string}>{["VIDEO", "ARTICLE", "LIVE", "QUIZ", "ASSIGNMENT"].map((k) => <option key={k}>{k}</option>)}</Select></Field>
                         <Field label="Summary" htmlFor={`ls-${l.id}`} className="md:col-span-2"><Input id={`ls-${l.id}`} name="summary" defaultValue={l.summary as string} /></Field>

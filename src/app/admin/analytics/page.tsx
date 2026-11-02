@@ -5,7 +5,7 @@ import { adminOverview } from "@/lib/services/analytics";
 import { Card, PageHeader, StatCard } from "@/components/ui/primitives";
 import { AreaChart, BarChart, Donut } from "@/components/ui/charts";
 import { DataTable } from "@/components/ui/data";
-import { formatMoney } from "@/lib/format";
+import { formatAmount as formatMoney } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Analytics · Admin" };
 
