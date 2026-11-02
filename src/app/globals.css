@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+/* Theme is controlled by data-theme on <html> (persisted in a cookie + localStorage). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  /* LIGHT — premium gradient white */
+  --bg: #fbfaf7;
+  --bg-2: #fff6ea;
+  --surface: #ffffff;
+  --surface-2: #f5f2ec;
+  --fg: #0b1220;
+  --fg-2: #2a3448;
+  --muted: #5b6478;
+  --line: rgba(11, 18, 32, 0.1);
+  --line-strong: rgba(11, 18, 32, 0.18);
+  --brand: #e26400;          /* AA on white for large text + UI */
+  --brand-strong: #c45500;   /* AA for small text on white */
+  --brand-2: #f59e0b;
+  --brand-3: #ffcc33;
+  --on-brand: #160a00;
+  --glass: rgba(255, 255, 255, 0.66);
+  --glass-strong: rgba(255, 255, 255, 0.82);
+  --glass-line: rgba(255, 255, 255, 0.9);
+  --shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 18px 40px -18px rgba(60, 38, 10, 0.22);
+  --glow: rgba(255, 140, 0, 0.18);
+  --grid: rgba(11, 18, 32, 0.05);
+  --ok: #0f8a4b;
+  --warn: #b45309;
+  --danger: #c0262d;
+  --info: #0e6ba8;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  /* DARK — deep navy / near-black engineering lab */
+  --bg: #05080f;
+  --bg-2: #0a1120;
+  --surface: #0c1424;
+  --surface-2: #111b30;
+  --fg: #eef2f8;
+  --fg-2: #c8d1e1;
+  --muted: #8f9bb3;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --brand: #ff7a00;
+  --brand-strong: #ff9a3c;
+  --brand-2: #ffb300;
+  --brand-3: #ffd60a;
+  --on-brand: #160a00;
+  --glass: rgba(16, 25, 44, 0.55);
+  --glass-strong: rgba(18, 28, 50, 0.78);
+  --glass-line: rgba(255, 255, 255, 0.09);
+  --shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 24px 60px -24px rgba(0, 0, 0, 0.7);
+  --glow: rgba(255, 122, 0, 0.22);
+  --grid: rgba(255, 255, 255, 0.035);
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --danger: #f87171;
+  --info: #60a5fa;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-display: var(--font-unbounded), "Arial Black", system-ui, sans-serif;
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-2: var(--brand-2);
+  --color-brand-3: var(--brand-3);
+  --color-on-brand: var(--on-brand);
+  --color-glass: var(--glass);
+  --color-glass-strong: var(--glass-strong);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-navy-950: #05080f;
+  --color-navy-900: #0a1120;
+  --color-navy-800: #111b30;
+
+  --animate-rise: rise 0.8s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+  --animate-pulse-ring: pulse-ring 2.4s ease-out infinite;
+  --animate-trace: trace 3s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-spin-slow: spin 18s linear infinite;
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes pulse-ring { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(1.8); opacity: 0; } }
+@keyframes trace { to { stroke-dashoffset: -200; } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+
+html { background: var(--bg); }
+body {
+  background:
+    radial-gradient(1200px 600px at 85% -10%, var(--glow), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, color-mix(in srgb, var(--brand-2) 10%, transparent), transparent 60%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+  background-attachment: fixed;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* blueprint grid used on hero / lab surfaces */
+.bg-blueprint {
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+@layer components {
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--glass-line);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+  }
+  .glass-strong {
+    background: var(--glass-strong);
+    border: 1px solid var(--glass-line);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+  }
+  .text-gradient {
+    background: linear-gradient(100deg, var(--brand) 0%, var(--brand-2) 55%, var(--brand-3) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .label-mono {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .focus-ring {
+    outline: none;
+  }
+  .focus-ring:focus-visible {
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--brand);
+  }
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--surface-2);
+    border-radius: 0.75rem;
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--fg) 6%, transparent), transparent);
+    animation: shimmer 1.4s infinite;
+  }
+  .prose-lesson h2 { font-family: var(--font-display); font-size: 1.25rem; margin: 1.2rem 0 .6rem; }
+  .prose-lesson p { margin: .6rem 0; color: var(--fg-2); line-height: 1.7; }
+  .prose-lesson ul { list-style: disc; padding-left: 1.25rem; color: var(--fg-2); }
+  .prose-lesson li { margin: .25rem 0; }
+  .prose-lesson code { font-family: var(--font-mono); font-size: .85em; background: var(--surface-2); padding: .1rem .35rem; border-radius: .35rem; }
+}
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection { background: color-mix(in srgb, var(--brand) 35%, transparent); }
+
+/* Reduced motion: honour OS setting and the in-app toggle (data-motion="reduced") */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
+[data-motion="reduced"] *, [data-motion="reduced"] *::before, [data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important;
+}
+html:not([data-motion="reduced"]) { scroll-behavior: smooth; }
+
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s cubic-bezier(.2,.7,.1,1), transform .8s cubic-bezier(.2,.7,.1,1); }
+.reveal.is-visible { opacity: 1; transform: none; }
+[data-motion="reduced"] .reveal { opacity: 1; transform: none; }
