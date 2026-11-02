@@ -1,6 +1,9 @@
 import { unstable_cache } from "next/cache";
 import { asUser, type DbActor } from "@/lib/db/client";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Row = Record<string, any>;
+
 /** Public catalogue queries — run as `anon` (or the user) so RLS decides visibility. */
 export interface CourseCardData {
   id: string;
@@ -74,7 +77,7 @@ export const listCourses = (f: CatalogFilters) =>
   unstable_cache(() => queryCatalog(f, null), ["catalog", JSON.stringify(f)], { revalidate: 60, tags: ["catalog"] })();
 
 export const listCategories = unstable_cache(
-  () => asUser(null, (tx) => tx`
+  (): Promise<Row[]> => asUser(null, (tx) => tx`
     select cat.*, (select count(*) from public.courses c where c.category_id = cat.id and c.status = 'PUBLISHED')::int as course_count
     from public.course_categories cat order by sort_order`),
   ["categories"], { revalidate: 300, tags: ["catalog"] },
@@ -102,7 +105,7 @@ export async function getCourseBySlug(slug: string, actor: DbActor | null) {
 }
 
 export const listUpcomingSessions = unstable_cache(
-  () => asUser(null, (tx) => tx`
+  (): Promise<Row[]> => asUser(null, (tx) => tx`
     select s.id, s.title, s.description, s.starts_at, s.duration_minutes, s.status, s.is_demo, c.title as course_title, c.slug as course_slug,
            cat.name as category_name, cat.accent
     from public.live_sessions s join public.courses c on c.id = s.course_id join public.course_categories cat on cat.id = c.category_id
@@ -112,7 +115,7 @@ export const listUpcomingSessions = unstable_cache(
 );
 
 export const listInstructors = unstable_cache(
-  () => asUser(null, (tx) => tx`
+  (): Promise<Row[]> => asUser(null, (tx) => tx`
     select i.*, (select count(*) from public.courses c where c.instructor_id = i.id and c.status = 'PUBLISHED')::int as course_count
     from public.instructor_profiles i where i.is_public order by i.display_name`),
   ["instructors"], { revalidate: 300, tags: ["catalog"] },

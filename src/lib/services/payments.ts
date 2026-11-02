@@ -250,9 +250,10 @@ export async function decideRefund(admin: { id: string }, refundId: string, appr
     return { ok: true as const, done: false, provider: r.provider as ProviderName, providerPaymentId: r.provider_payment_id as string, amount, orderId: r.order_id as string };
   });
   if (!prep.ok || prep.done) return prep;
+  if (!("providerPaymentId" in prep) || !prep.providerPaymentId) return { ok: false as const, error: "No captured payment found for this order." };
   try {
     const provider = paymentProvider(prep.provider);
-    const res = await provider.refund(prep.providerPaymentId, prep.amount, { refundId, orderId: prep.orderId });
+    const res = await provider.refund(prep.providerPaymentId, prep.amount!, { refundId, orderId: prep.orderId! });
     await asService(async (tx) => {
       // stays PROCESSING until completeRefund() (immediately for instant refunds, or via the refund.processed webhook)
       await tx`update public.refunds set provider_refund_id = ${res.providerRefundId}, status = 'PROCESSING' where id = ${refundId}`;
