@@ -100,7 +100,9 @@ export async function getCourseBySlug(slug: string, actor: DbActor | null) {
     const enrollment = actor
       ? (await tx`select status, progress_percent::float as progress from public.enrollments where course_id = ${c.id} and user_id = ${actor.id}`)[0] ?? null
       : null;
-    return { course: c, outline, sessions, enrollment };
+    const options = await tx`select id, label, duration_days, price_paise from public.course_price_options
+                             where course_id = ${c.id} and is_active order by sort_order, price_paise`;
+    return { course: c, outline, sessions, enrollment, options };
   });
 }
 

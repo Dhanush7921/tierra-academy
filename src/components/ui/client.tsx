@@ -48,7 +48,7 @@ export function MotionToggle({ className }: { className?: string }) {
 }
 
 export function SubmitButton({ children, pendingText, variant = "primary", size = "md", className, ...rest }:
-  { children: ReactNode; pendingText?: string; variant?: "primary" | "secondary" | "ghost" | "danger" | "outline"; size?: "sm" | "md" | "lg"; className?: string; name?: string; value?: string; formAction?: (fd: FormData) => void }) {
+  { children: ReactNode; pendingText?: string; variant?: "primary" | "secondary" | "ghost" | "danger" | "outline"; size?: "sm" | "md" | "lg"; className?: string; name?: string; value?: string; form?: string; formAction?: (fd: FormData) => void }) {
   const { pending } = useFormStatus();
   return (
     <button type="submit" disabled={pending} aria-busy={pending} className={buttonClass(variant, size, className)} {...rest}>

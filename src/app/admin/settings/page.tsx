@@ -8,6 +8,7 @@ import { Flash, type SP } from "../Flash";
 import { Badge, Card, Field, Input, PageHeader, buttonClass } from "@/components/ui/primitives";
 import { SubmitButton } from "@/components/ui/client";
 import { formatDateTime } from "@/lib/format";
+import { checkoutReadiness } from "@/lib/services/price-options";
 
 export const metadata: Metadata = { title: "Settings · Admin" };
 
@@ -19,6 +20,8 @@ export default async function Settings({ searchParams }: { searchParams: SP }) {
     await tx`select key, value from public.platform_settings`,
     await tx`select * from public.contact_messages order by handled_at nulls first, created_at desc limit 30`,
   ]);
+  const readiness = await checkoutReadiness();
+  const tax = readiness.tax;
   const support = (settings.find((s) => s.key === "support")?.value ?? {}) as Record<string, string>;
   const providers: [string, string, boolean][] = [
     ["Mode", e.APP_MODE, e.APP_MODE === "production"],
@@ -35,6 +38,19 @@ export default async function Settings({ searchParams }: { searchParams: SP }) {
     <div className="mx-auto max-w-6xl space-y-6">
       <Flash sp={sp} />
       <PageHeader eyebrow="Platform" title="Settings" description="Provider credentials are configured as server environment variables (never in the database or browser)." />
+      <Card id="tax" className="p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-semibold">Tax &amp; checkout</h2>
+          <Badge tone={readiness.ready ? "ok" : "warn"}>{readiness.ready ? "Checkout open" : "Checkout closed"}</Badge>
+        </div>
+        {readiness.reason && <p className="mb-4 text-sm text-muted">{readiness.reason}</p>}
+        <form action={A.saveTaxAction} className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_auto]">
+          <Field label="Tax name (as on invoices)" htmlFor="taxLabel"><Input id="taxLabel" name="label" defaultValue={tax.label} placeholder="e.g. GST" /></Field>
+          <Field label="Rate (%)" htmlFor="taxRate" hint="Confirm the applicable rate with your accountant."><Input id="taxRate" name="rate" type="number" min="0" max="100" step="0.01" defaultValue={String(tax.rateBp / 100)} /></Field>
+          <SubmitButton>Save tax</SubmitButton>
+          <label className="flex items-center gap-2 text-sm sm:col-span-3"><input type="checkbox" name="configured" defaultChecked={tax.configured} className="size-4 accent-[var(--brand)]" />This tax setup is final and may be charged to students</label>
+        </form>
+      </Card>
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-5">
           <h2 className="mb-3 font-semibold">Integrations status</h2>

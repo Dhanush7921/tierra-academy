@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { quote, couponError, type CouponRow } from "@/lib/services/pricing";
+import { applyTax, quote, couponError, type CouponRow } from "@/lib/services/pricing";
 import { eligibilityError } from "@/lib/services/enrollment";
 import { gradeAnswers, isVideoComplete } from "@/lib/services/learning";
 import { formatMoney, formatDuration, slugify } from "@/lib/format";
@@ -60,5 +60,21 @@ describe("formatting", () => {
     expect(formatDuration(24)).toBe("24 sec");
     expect(formatDuration(3720)).toBe("1h 2m");
     expect(slugify("IoT with ESP32: Sensors → Cloud!")).toBe("iot-with-esp32-sensors-cloud");
+  });
+});
+
+describe("applyTax (paid courses)", () => {
+  const base = (subtotal: number, discount = 0) => ({ ok: true as const, subtotal, discount, total: subtotal - discount, couponId: null });
+  it("adds tax on the post-discount amount, in paise", () => {
+    const r = applyTax(base(300000), 1800);
+    expect([r.net, r.tax, r.payable]).toEqual([300000, 54000, 354000]);
+    expect(applyTax(base(450000, 50000), 1800)).toMatchObject({ net: 400000, tax: 72000, payable: 472000 });
+  });
+  it("charges no tax when the rate is zero or the amount is zero", () => {
+    expect(applyTax(base(600000), 0).payable).toBe(600000);
+    expect(applyTax(base(300000, 300000), 1800).payable).toBe(0);
+  });
+  it("rounds tax to the nearest paisa", () => {
+    expect(applyTax(base(333), 1800).tax).toBe(60);
   });
 });

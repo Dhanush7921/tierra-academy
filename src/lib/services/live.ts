@@ -71,7 +71,11 @@ export async function getJoinInfo(user: { id: string; email: string; fullName: s
   if (!isHost && now < start - 15 * 60_000) return { ok: false, error: `The classroom opens 15 minutes before the start (${formatDateTime(s.starts_at as string)}).` };
   if (s.status === "ENDED" || now > end + 60 * 60_000) return { ok: false, error: "This class has ended. Check the course for the recording." };
   const session = { id: s.id, title: s.title, courseTitle: s.course_title, courseSlug: s.course_slug, startsAt: s.starts_at, durationMinutes: s.duration_minutes, status: s.status, recordingNotice: s.recording_consent_notice };
-  if (s.provider !== "zoom") return { ok: true, mode: "demo", session, isHost };
+  if (s.provider !== "zoom") {
+    // The simulated classroom is never shown as a real class in production.
+    if (env().APP_MODE === "production") return { ok: false, error: "Live classes are not connected yet. The academy team will share the class link with enrolled students." };
+    return { ok: true, mode: "demo", session, isHost };
+  }
   const [sec] = await asService((tx) => tx`select meeting_id, passcode, join_url from public.live_session_secrets where live_session_id = ${sessionId}`);
   if (!sec?.meeting_id) return { ok: false, error: "The meeting has not been provisioned yet. Please try again shortly." };
   const sig = meetingSdkSignature(sec.meeting_id as string, s.host_id === user.id ? 1 : 0);

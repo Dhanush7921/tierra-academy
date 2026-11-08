@@ -23,12 +23,18 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+const THEME_BOOT = `(function(){try{var t=localStorage.getItem("ta_theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;}}catch(e){}})();`;
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const jar = await cookies();
   const theme = jar.get("ta_theme")?.value === "light" ? "light" : "dark";
   const motion = jar.get("ta_motion")?.value === "reduced" ? "reduced" : "full";
   return (
     <html lang="en-IN" data-theme={theme} data-motion={motion} className={`${display.variable} ${sans.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Runs before first paint: restores the saved theme (also after client-side navigation / cookie-path changes) so there is no flash. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
       <body className="min-h-dvh">
         <a href="#main" className="sr-only z-[100] rounded-lg bg-brand px-4 py-2 text-on-brand focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to content</a>
         <DemoBanner />

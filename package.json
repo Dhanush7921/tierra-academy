@@ -2,7 +2,7 @@
   "name": "tierra-academy",
   "version": "0.1.0",
   "private": true,
-  "description": "TIERRA ACADEMY — engineering learning platform by Tierra Automation. Learn. Build. Automate.",
+  "description": "TIERRA ACADEMY \u2014 engineering learning platform by Tierra Automation. Learn. Build. Automate.",
   "engines": {
     "node": ">=20.11"
   },
@@ -10,7 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:academy": "cross-env NEXT_PUBLIC_BASE_PATH=/academy next build",
-    "start": "next start",
+    "start": "next start -p ${PORT:-3000}",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "db:migrate": "tsx scripts/migrate.ts",
@@ -23,7 +23,8 @@
     "test:db": "vitest run tests/db",
     "test:e2e": "playwright test",
     "load:smoke": "k6 run load/k6/public-browse.js",
-    "load:local": "tsx load/node-load.ts"
+    "load:local": "tsx load/node-load.ts",
+    "db:seed:production": "tsx scripts/seed-production.ts"
   },
   "dependencies": {
     "@zoom/meetingsdk": "^3.13.2",
@@ -34,7 +35,8 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "three": "^0.180.0",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "tsx": "^4.20.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -48,7 +50,6 @@
     "eslint": "^9.35.0",
     "eslint-config-next": "^15.5.4",
     "tailwindcss": "^4.1.13",
-    "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   }

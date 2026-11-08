@@ -5,7 +5,8 @@ import {
   DemoPaymentProvider, RazorpayProvider, paymentProvider, verifyRazorpayCheckoutSignature,
   type NormalizedPaymentEvent, type ProviderName,
 } from "@/lib/providers/payments";
-import { quote, type CouponRow } from "@/lib/services/pricing";
+import { applyTax, quote, type CouponRow } from "@/lib/services/pricing";
+import { checkoutReadiness, listOptions } from "@/lib/services/price-options";
 import { eligibilityError, grantEnrollment, loadEligibility, type EligibilityCourse } from "@/lib/services/enrollment";
 import { audit } from "@/lib/services/audit";
 import { notify } from "@/lib/services/notifications";
@@ -18,10 +19,9 @@ export type CheckoutResult =
  * Creates an order for a paid course. The amount is computed on the server from the DB
  * price and a validated coupon — never from client input.
  */
-export async function createCheckout(user: { id: string; email: string }, courseId: string, couponCode?: string | null): Promise<CheckoutResult> {
+export async function createCheckout(user: { id: string; email: string }, courseId: string, couponCode?: string | null, optionId?: string | null): Promise<CheckoutResult> {
   const visible = await asUser(user, (tx) => tx`select id from public.courses where id = ${courseId}`);
   if (!visible[0]) return { ok: false, error: "Course not found." };
-  const provider = paymentProvider();
 
   const prepared = await asService(async (tx) => {
     const el = await loadEligibility(tx, courseId);
@@ -31,6 +31,12 @@ export async function createCheckout(user: { id: string; email: string }, course
     const err = eligibilityError(el.course as unknown as EligibilityCourse, el.activeCount);
     if (err) return { ok: false as const, error: err };
     if (el.course.is_free) return { ok: false as const, error: "This course is free — enroll directly." };
+    const readiness = await checkoutReadiness(tx);
+    if (!readiness.ready) return { ok: false as const, error: "Enrollment for this course opens soon. Online payment is not available yet." };
+    const provider = paymentProvider();
+    const options = await listOptions(tx, courseId);
+    const option = options.length ? options.find((o) => o.id === optionId) : null;
+    if (options.length && !option) return { ok: false as const, error: "Please choose a training duration." };
 
     let coupon: CouponRow | null = null;
     if (couponCode?.trim()) {
@@ -38,17 +44,22 @@ export async function createCheckout(user: { id: string; email: string }, course
       if (!c) return { ok: false as const, error: "Coupon not found." };
       coupon = c as unknown as CouponRow;
     }
-    const q = quote({ id: courseId, is_free: el.course.is_free as boolean, price_paise: el.course.price_paise as number }, coupon);
-    if (!q.ok) return { ok: false as const, error: q.error };
+    const base = quote({ id: courseId, is_free: el.course.is_free as boolean, price_paise: option ? option.price_paise : (el.course.price_paise as number) }, coupon);
+    if (!base.ok) return { ok: false as const, error: base.error };
+    const q = applyTax(base, readiness.tax.rateBp);
+    const snapshot = { courseTitle: el.course.title, option: option ? { id: option.id, label: option.label, durationDays: option.duration_days, pricePaise: option.price_paise } : null,
+      subtotal: q.subtotal, discount: q.discount, net: q.net, tax: { label: readiness.tax.label, rateBp: readiness.tax.rateBp, amount: q.tax }, total: q.payable, coupon: couponCode ?? null, at: new Date().toISOString() };
 
     const receipt = `TA-${Date.now().toString(36).toUpperCase()}-${randomCode(5)}`;
     const [order] = await tx`
-      insert into public.orders (user_id, course_id, status, provider, subtotal_paise, discount_paise, amount_paise, currency, coupon_id, receipt)
-      values (${user.id}, ${courseId}, 'CREATED', ${q.total === 0 ? "none" : provider.name}, ${q.subtotal}, ${q.discount}, ${q.total},
-              ${el.course.currency as string}, ${q.couponId}, ${receipt})
+      insert into public.orders (user_id, course_id, status, provider, subtotal_paise, discount_paise, amount_paise, currency, coupon_id, receipt,
+                                 price_option_id, option_label, duration_days, tax_label, tax_rate_bp, tax_paise, pricing_snapshot)
+      values (${user.id}, ${courseId}, 'CREATED', ${q.payable === 0 ? "none" : provider.name}, ${q.subtotal}, ${q.discount}, ${q.payable},
+              ${el.course.currency as string}, ${q.couponId}, ${receipt}, ${option?.id ?? null}, ${option?.label ?? null}, ${option?.duration_days ?? null},
+              ${readiness.tax.label}, ${readiness.tax.rateBp}, ${q.tax}, ${tx.json(snapshot as never)})
       returning id`;
-    await audit({ actorId: user.id, action: "order.create", entityType: "order", entityId: order.id as string, metadata: { courseId, amount: q.total, coupon: couponCode ?? null } }, tx);
-    return { ok: true as const, orderId: order.id as string, amount: q.total, currency: el.course.currency as string, receipt, title: el.course.title as string };
+    await audit({ actorId: user.id, action: "order.create", entityType: "order", entityId: order.id as string, metadata: { courseId, option: option?.label ?? null, amount: q.payable, tax: q.tax, coupon: couponCode ?? null } }, tx);
+    return { ok: true as const, orderId: order.id as string, amount: q.payable, currency: el.course.currency as string, receipt, title: el.course.title as string };
   });
   if (!prepared.ok) return prepared;
 
@@ -58,15 +69,16 @@ export async function createCheckout(user: { id: string; email: string }, course
     return { ok: true, orderId: prepared.orderId, provider: "none", providerOrderId: null, amountPaise: 0, currency: prepared.currency, fulfilled: true };
   }
 
-  const created = await provider.createOrder({
+  const pv = paymentProvider();
+  const created = await pv.createOrder({
     amountPaise: prepared.amount, currency: prepared.currency, receipt: prepared.receipt,
     notes: { orderId: prepared.orderId, courseId, userId: user.id },
   });
   await asService((tx) => tx`update public.orders set provider_order_id = ${created.providerOrderId}, status = 'PENDING' where id = ${prepared.orderId}`);
   return {
-    ok: true, orderId: prepared.orderId, provider: provider.name, providerOrderId: created.providerOrderId,
+    ok: true, orderId: prepared.orderId, provider: pv.name, providerOrderId: created.providerOrderId,
     amountPaise: prepared.amount, currency: prepared.currency, fulfilled: false,
-    keyId: provider.name === "razorpay" ? env().RAZORPAY_KEY_ID : undefined,
+    keyId: pv.name === "razorpay" ? env().RAZORPAY_KEY_ID : undefined,
   };
 }
 

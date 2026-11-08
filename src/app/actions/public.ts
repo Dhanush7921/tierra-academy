@@ -30,7 +30,8 @@ export async function startCheckoutAction(_prev: CheckoutState, fd: FormData): P
   if (!rl.ok) return { ok: false, error: "Too many checkout attempts. Please wait a few minutes." };
   const courseId = String(fd.get("courseId") || "");
   const coupon = String(fd.get("coupon") || "").trim() || null;
-  return createCheckout(user, courseId, coupon);
+  const optionId = String(fd.get("optionId") || "") || null;
+  return createCheckout(user, courseId, coupon, optionId);
 }
 
 export async function contactAction(_prev: FormState, fd: FormData): Promise<FormState> {

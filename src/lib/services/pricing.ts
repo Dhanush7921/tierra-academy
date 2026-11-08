@@ -44,3 +44,10 @@ export function quote(course: PricedCourse, coupon: CouponRow | null, now = new 
   if (total > 0 && total < 100) total = Math.min(100, subtotal);
   return { ok: true, subtotal, discount: subtotal - total, total, couponId: coupon.id };
 }
+
+/** Tax is charged on the post-discount amount. rateBp = basis points (1800 = 18%). */
+export function applyTax(q: Extract<PriceQuote, { ok: true }>, rateBp: number) {
+  const net = q.total;
+  const tax = net > 0 && rateBp > 0 ? Math.round((net * rateBp) / 10000) : 0;
+  return { ...q, net, tax, payable: net + tax };
+}

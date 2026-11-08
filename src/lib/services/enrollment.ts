@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 import { asService, asUser, type Tx } from "@/lib/db/client";
 import { audit } from "@/lib/services/audit";
 import { notify } from "@/lib/services/notifications";
@@ -67,6 +68,8 @@ export async function enrollFree(user: { id: string; email: string }, courseId: 
     const el = await loadEligibility(tx, courseId);
     if (!el) return { ok: false, error: "Course not found." };
     if (!el.course.is_free) return { ok: false, error: "This is a paid course.", needsPayment: true };
+    // Tierra Academy is fully paid: free self-enrollment is disabled in production.
+    if (env().APP_MODE === "production") return { ok: false, error: "This course requires a paid enrollment.", needsPayment: true };
     const [already] = await tx`select status from public.enrollments where user_id = ${user.id} and course_id = ${courseId}`;
     if (already && ["ACTIVE", "COMPLETED"].includes(already.status as string)) return { ok: true, alreadyEnrolled: true };
     const err = eligibilityError(el.course as unknown as EligibilityCourse, el.activeCount);

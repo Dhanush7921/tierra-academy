@@ -11,6 +11,8 @@ import { ConfirmSubmit, SubmitButton } from "@/components/ui/client";
 import { VideoUploader } from "@/components/admin/VideoUploader";
 import { BarChart } from "@/components/ui/charts";
 import { formatDateTime, formatDuration, formatMoney } from "@/lib/format";
+import { getTaxSettings, listOptions } from "@/lib/services/price-options";
+import { applyTax } from "@/lib/services/pricing";
 
 export const metadata: Metadata = { title: "Edit course · Admin" };
 const TABS = [["details", "Details"], ["curriculum", "Curriculum"], ["media", "Media"], ["assessments", "Assessments"], ["pricing", "Pricing"], ["team", "Team"], ["history", "Review history"], ["analytics", "Analytics"]] as const;
@@ -46,6 +48,7 @@ export default async function CourseEditor({ params, searchParams }: { params: P
   const { c } = data;
   const editable = sa || ["DRAFT", "REJECTED"].includes(c.status as string);
   const analytics = tab === "analytics" ? await courseAnalytics(user, id) : null;
+  const pricing = tab === "pricing" ? await asUser(user, async (tx) => ({ options: await listOptions(tx, id, false), tax: await getTaxSettings(tx) })) : null;
   const B = (fn: (...a: never[]) => unknown, ...args: unknown[]) => (fn as (...a: unknown[]) => unknown).bind(null, ...args) as (fd: FormData) => Promise<void>;
 
   return (
@@ -232,21 +235,51 @@ export default async function CourseEditor({ params, searchParams }: { params: P
         </div>
       )}
 
-      {tab === "pricing" && (
-        <Card className="max-w-xl p-6">
+      {tab === "pricing" && pricing && (
+        <div className="grid gap-5">
+          {!pricing.tax.configured && <Alert tone="warn">Tax is not confirmed yet, so checkout stays closed. Set it under <Link href="/admin/settings#tax" className="underline">Settings → Tax</Link>.</Alert>}
+          <Card className="p-5">
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="font-semibold">Training durations &amp; fees</h2>
+              <p className="text-xs text-muted">Prices exclude tax ({pricing.tax.configured ? `${pricing.tax.label} ${pricing.tax.rateBp / 100}%` : "tax not set"}). Changes apply to the catalogue and new orders only; past orders keep their snapshot.</p>
+            </div>
+            {pricing.options.length ? (
+              <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-sm">
+                <thead><tr className="text-left text-xs text-muted"><th className="py-2 pr-2 font-medium">Duration</th><th className="pr-2 font-medium">Days</th><th className="pr-2 font-medium">Fee (₹)</th><th className="pr-2 font-medium">Order</th><th className="pr-2 font-medium">On sale</th><th className="pr-2 font-medium">Subtotal · tax · payable</th><th /></tr></thead>
+                <tbody className="divide-y divide-line">{pricing.options.map((o) => {
+                  const t = applyTax({ ok: true, subtotal: o.price_paise, discount: 0, total: o.price_paise, couponId: null }, pricing.tax.rateBp);
+                  const fid = `opt-${o.id}`;
+                  return (
+                    <tr key={o.id} className="align-middle">
+                      <td className="py-2 pr-2"><form id={fid} action={sa ? B(A.savePriceOptionAction, id) : undefined} /><input type="hidden" form={fid} name="id" value={o.id} />
+                        <Input form={fid} name="label" defaultValue={o.label} aria-label="Duration name" disabled={!sa} /></td>
+                      <td className="pr-2"><Input form={fid} name="durationDays" type="number" min="1" defaultValue={o.duration_days ?? ""} aria-label="Days" className="w-20" disabled={!sa} /></td>
+                      <td className="pr-2"><Input form={fid} name="price" type="number" min="1" step="1" defaultValue={String(o.price_paise / 100)} aria-label="Fee in rupees" className="w-28" disabled={!sa} /></td>
+                      <td className="pr-2"><Input form={fid} name="sortOrder" type="number" defaultValue={String(o.sort_order)} aria-label="Display order" className="w-16" disabled={!sa} /></td>
+                      <td className="pr-2"><input form={fid} type="checkbox" name="isActive" defaultChecked={o.is_active} disabled={!sa} aria-label="On sale" className="size-4 accent-[var(--brand)]" /></td>
+                      <td className="pr-2 tabular-nums text-fg-2">{formatMoney(t.subtotal)} · {formatMoney(t.tax)} · <strong className="text-fg">{formatMoney(t.payable)}</strong></td>
+                      <td className="whitespace-nowrap">{sa && <span className="flex gap-2"><SubmitButton form={fid} size="sm">Save</SubmitButton>
+                        <form action={B(A.deletePriceOptionAction, id, o.id)}><ConfirmSubmit confirmText={`Remove "${o.label}"?`}>Remove</ConfirmSubmit></form></span>}</td>
+                    </tr>
+                  );
+                })}</tbody>
+              </table></div>
+            ) : <EmptyState icon="tag" title="No durations yet" description={sa ? "Add the first duration and fee below." : "A Super Admin sets fees for this course."} />}
+          </Card>
           {sa ? (
-            <form action={B(A.pricingAction, id)} className="grid gap-4">
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="isFree" defaultChecked={c.is_free as boolean} className="accent-[var(--brand)]" />Free course</label>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Price (₹)" htmlFor="price"><Input id="price" name="price" type="number" min="0" step="1" defaultValue={String((c.price_paise as number) / 100)} /></Field>
-                <Field label="Compare-at price (₹, optional)" htmlFor="compareAt"><Input id="compareAt" name="compareAt" type="number" min="0" step="1" defaultValue={c.compare_at_price_paise ? String((c.compare_at_price_paise as number) / 100) : ""} /></Field>
-              </div>
-              <div><SubmitButton>Save pricing</SubmitButton></div>
-            </form>
-          ) : (
-            <div><p className="text-sm text-muted">Current price</p><p className="font-display text-2xl font-semibold">{c.is_free ? "Free" : formatMoney(c.price_paise as number)}</p><p className="mt-3 text-sm text-muted">Pricing is managed by a Super Admin.</p></div>
-          )}
-        </Card>
+            <Card className="p-5">
+              <h2 className="mb-3 font-semibold">Add a duration</h2>
+              <form action={B(A.savePriceOptionAction, id)} className="grid items-end gap-3 sm:grid-cols-[1.4fr_.8fr_1fr_.6fr_auto]">
+                <Field label="Name" htmlFor="nlabel"><Input id="nlabel" name="label" placeholder="e.g. 3 Months" required /></Field>
+                <Field label="Days" htmlFor="ndays"><Input id="ndays" name="durationDays" type="number" min="1" placeholder="90" /></Field>
+                <Field label="Fee (₹, excl. tax)" htmlFor="nprice"><Input id="nprice" name="price" type="number" min="1" step="1" required /></Field>
+                <Field label="Order" htmlFor="nsort"><Input id="nsort" name="sortOrder" type="number" defaultValue={String(pricing.options.length)} /></Field>
+                <input type="hidden" name="isActive" value="on" />
+                <SubmitButton>Add</SubmitButton>
+              </form>
+            </Card>
+          ) : <p className="text-sm text-muted">Fees and taxes are managed by a Super Admin.</p>}
+        </div>
       )}
 
       {tab === "team" && sa && (

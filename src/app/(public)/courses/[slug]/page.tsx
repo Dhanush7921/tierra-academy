@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { getCourseBySlug } from "@/lib/services/catalog";
 import { enrollFreeAction } from "@/app/actions/public";
+import { checkoutReadiness } from "@/lib/services/price-options";
 import { CourseThumb } from "@/components/public/CourseCard";
 import { Alert, Badge, Card, ProgressBar, buttonClass } from "@/components/ui/primitives";
 import { SubmitButton } from "@/components/ui/client";
@@ -26,7 +27,8 @@ export default async function CoursePage({ params, searchParams }: P) {
   const user = await getSession();
   const data = await getCourseBySlug(slug, user);
   if (!data) notFound();
-  const { course: c, outline, sessions, enrollment } = data;
+  const { course: c, outline, sessions, enrollment, options } = data;
+  const readiness = await checkoutReadiness();
   const modules = new Map<string, { title: string; lessons: typeof outline }>();
   for (const row of outline) {
     const m = modules.get(row.module_id as string) ?? { title: row.module_title as string, lessons: [] as unknown as typeof outline };
@@ -127,9 +129,20 @@ export default async function CoursePage({ params, searchParams }: P) {
             <CourseThumb title={c.title as string} categorySlug={c.category_slug as string} accent={c.accent as string} src={c.thumbnail_url as string | null} />
             <div className="p-3">
               <div className="flex items-baseline gap-2">
-                <span className="font-display text-3xl font-semibold">{c.is_free ? "Free" : formatMoney(c.price_paise as number, c.currency as string)}</span>
+                <span className="font-display text-3xl font-semibold">{c.is_free ? "Free" : `${options.length > 1 ? "From " : ""}${formatMoney(c.price_paise as number, c.currency as string)}`}</span>
+                {!c.is_free && <span className="text-sm text-muted">+ applicable tax</span>}
                 {!c.is_free && c.compare_at_price_paise && <span className="text-muted line-through">{formatMoney(c.compare_at_price_paise as number)}</span>}
               </div>
+              {!c.is_free && options.length > 0 && (
+                <ul className="mt-4 divide-y divide-line rounded-xl border border-line text-sm">
+                  {options.map((o) => (
+                    <li key={o.id as string} className="flex items-center justify-between px-3 py-2">
+                      <span>{o.label as string}{o.duration_days ? <span className="text-muted"> · {o.duration_days as number} days</span> : null}</span>
+                      <span className="font-semibold tabular-nums">{formatMoney(o.price_paise as number)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
               {enrolled ? (
                 <div className="mt-4 space-y-3">
                   <ProgressBar value={Number(enrollment!.progress)} label="Course progress" />
@@ -143,11 +156,15 @@ export default async function CoursePage({ params, searchParams }: P) {
               ) : c.is_free ? (
                 <form action={enroll} className="mt-4"><SubmitButton size="lg" className="w-full" pendingText="Enrolling…">{user ? "Enroll for free" : "Sign in to enroll free"}</SubmitButton></form>
               ) : (
-                <Link href={user ? `/checkout/${c.slug}` : `/login?next=/checkout/${c.slug}`} className={buttonClass("primary", "lg", "mt-4 w-full")}>Buy course</Link>
+                readiness.ready ? (
+                  <Link href={user ? `/checkout/${c.slug}` : `/login?next=/checkout/${c.slug}`} className={buttonClass("primary", "lg", "mt-4 w-full")}>Choose duration &amp; enroll</Link>
+                ) : (
+                  <p className="mt-4 rounded-xl border border-line bg-surface-2 px-3 py-2.5 text-sm text-fg-2">Enrollment opens soon. <Link href="/contact" className="underline">Contact us</Link> to register your interest.</p>
+                )
               )}
               <ul className="mt-5 space-y-2 text-sm text-fg-2">
-                <li className="flex gap-2"><Icon name="unlock" size={16} className="text-muted" />{c.access_days ? `${c.access_days} days of access` : "Lifetime access to recordings"}</li>
-                <li className="flex gap-2"><Icon name="award" size={16} className="text-muted" />Verifiable certificate</li>
+                {c.access_days ? <li className="flex gap-2"><Icon name="unlock" size={16} className="text-muted" />{`${c.access_days} days of access`}</li> : null}
+                {c.certificate_enabled ? <li className="flex gap-2"><Icon name="award" size={16} className="text-muted" />Tierra Automation completion certificate</li> : null}
                 {!c.is_free && <li className="flex gap-2"><Icon name="shield" size={16} className="text-muted" />Secure checkout · <Link href="/refund-policy" className="underline">refund policy</Link></li>}
               </ul>
             </div>

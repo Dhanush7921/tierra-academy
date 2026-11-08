@@ -23,7 +23,12 @@ function loadRazorpay(): Promise<boolean> {
   });
 }
 
-export function CheckoutPanel({ courseId, slug, provider, user }: { courseId: string; slug: string; provider: "demo" | "razorpay"; user: { name: string; email: string } }) {
+type Opt = { id: string; label: string; durationDays: number | null; pricePaise: number };
+
+export function CheckoutPanel({ courseId, slug, provider, user, options = [], tax }: { courseId: string; slug: string; provider: "demo" | "razorpay"; user: { name: string; email: string }; options?: Opt[]; tax: { label: string; rateBp: number } }) {
+  const [optionId, setOptionId] = useState(options[0]?.id ?? "");
+  const chosen = options.find((o) => o.id === optionId);
+  const taxPaise = chosen ? Math.round((chosen.pricePaise * tax.rateBp) / 10000) : 0;
   const router = useRouter();
   const [state, action] = useActionState<CheckoutState, FormData>(startCheckoutAction, undefined);
   const [status, setStatus] = useState<{ tone: "info" | "ok" | "danger" | "warn"; text: string } | null>(null);
@@ -72,8 +77,28 @@ export function CheckoutPanel({ courseId, slug, provider, user }: { courseId: st
       {!awaitingDemo ? (
         <form action={action} className="space-y-4">
           <input type="hidden" name="courseId" value={courseId} />
-          <Field label="Coupon code (optional)" htmlFor="coupon" hint={provider === "demo" ? "Demo coupons: WELCOME10, TIERRA500, DEMOFREE100" : undefined}>
-            <Input id="coupon" name="coupon" placeholder="e.g. WELCOME10" autoComplete="off" />
+          {options.length > 0 && (
+            <fieldset className="space-y-2">
+              <legend className="mb-2 text-sm font-medium">Training duration</legend>
+              {options.map((o) => (
+                <label key={o.id} className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-sm transition ${o.id === optionId ? "border-brand bg-[color-mix(in_srgb,var(--brand)_8%,transparent)]" : "border-line hover:border-line-strong"}`}>
+                  <span className="flex items-center gap-2"><input type="radio" name="optionId" value={o.id} checked={o.id === optionId} onChange={() => setOptionId(o.id)} className="accent-[var(--brand)]" />
+                    {o.label}{o.durationDays ? <span className="text-muted">· {o.durationDays} days</span> : null}</span>
+                  <span className="font-semibold tabular-nums">{formatMoney(o.pricePaise)}</span>
+                </label>
+              ))}
+            </fieldset>
+          )}
+          {chosen && (
+            <dl className="space-y-1 rounded-xl border border-line p-3 text-sm tabular-nums">
+              <div className="flex justify-between"><dt className="text-muted">Course fee</dt><dd>{formatMoney(chosen.pricePaise)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">{tax.label} ({tax.rateBp / 100}%)</dt><dd>{formatMoney(taxPaise)}</dd></div>
+              <div className="flex justify-between border-t border-line pt-1 font-semibold"><dt>Total payable</dt><dd>{formatMoney(chosen.pricePaise + taxPaise)}</dd></div>
+              <p className="pt-1 text-xs text-muted">Coupons are applied before tax. The final amount is confirmed on the server.</p>
+            </dl>
+          )}
+          <Field label="Coupon code (optional)" htmlFor="coupon">
+            <Input id="coupon" name="coupon" placeholder="Enter coupon" autoComplete="off" />
           </Field>
           {state && !state.ok && <Alert tone="danger">{state.error}</Alert>}
           <SubmitButton size="lg" className="w-full" pendingText="Creating order…">{provider === "razorpay" ? "Pay securely with Razorpay" : "Continue to demo payment"}</SubmitButton>

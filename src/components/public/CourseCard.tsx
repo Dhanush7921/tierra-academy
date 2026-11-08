@@ -40,7 +40,7 @@ export function CourseCard({ c }: { c: CourseCardData }) {
           <span className="text-xs text-muted">{c.lesson_count} lessons · {c.estimated_hours}h</span>
           <span className="text-right">
             {c.compare_at_price_paise && !c.is_free ? <span className="mr-1.5 text-xs text-muted line-through">{formatMoney(c.compare_at_price_paise)}</span> : null}
-            <span className={c.is_free ? "font-semibold text-ok" : "font-display font-semibold"}>{c.is_free ? "Free" : formatMoney(c.price_paise, c.currency)}</span>
+            <span className={c.is_free ? "font-semibold text-ok" : "font-display font-semibold"}>{c.is_free ? "Free" : formatMoney(c.price_paise, c.currency)}</span>{!c.is_free && <span className="ml-1 text-[11px] text-muted">+ tax</span>}
           </span>
         </div>
         {c.is_demo && <span className="mt-2 self-start rounded-md bg-surface-2 px-1.5 py-0.5 font-mono text-[9px] tracking-widest text-muted">DEMO CONTENT</span>}

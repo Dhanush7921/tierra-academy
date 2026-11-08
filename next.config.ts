@@ -39,6 +39,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   basePath: basePath || undefined,
   poweredByHeader: false,
+  // Lint runs in CI (npm run lint); a lint warning must not block a production deploy.
+  eslint: { ignoreDuringBuilds: true },
   reactStrictMode: true,
   images: { formats: ["image/avif", "image/webp"] },
   experimental: {

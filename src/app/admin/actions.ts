@@ -12,6 +12,7 @@ import {
 } from "@/lib/services/courses-admin";
 import { decideSession, proposeSession, setSessionStatus, syncZoomAttendance } from "@/lib/services/live";
 import { decideRefund } from "@/lib/services/payments";
+import { deleteOption, saveOption, saveTaxSettings } from "@/lib/services/price-options";
 import { createInvitation, revokeInvitation } from "@/lib/services/invitations";
 import { grantEnrollment } from "@/lib/services/enrollment";
 import { issueCertificateIfEligible } from "@/lib/services/learning";
@@ -80,6 +81,38 @@ export async function pricingAction(courseId: string, fd: FormData) {
     if (!p.success) throw new Error(p.error.issues[0].message);
     await updatePricing(actor(u), courseId, { isFree: p.data.isFree, pricePaise: Math.round(p.data.price * 100), compareAtPaise: p.data.compareAt });
     return "Pricing updated.";
+  });
+}
+
+const rupeesToPaise = (v: string) => {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0 || n > 10_000_000) throw new Error("Enter a valid price in rupees.");
+  return Math.round(n * 100);
+};
+
+export async function savePriceOptionAction(courseId: string, fd: FormData) {
+  await run("course.pricing", `/admin/courses/${courseId}?tab=pricing`, async (u) => {
+    const label = s(fd, "label").trim().slice(0, 60);
+    if (!label) throw new Error("Give the duration a name, e.g. \"1 Month\".");
+    const daysRaw = s(fd, "durationDays").trim();
+    const durationDays = daysRaw ? Number(daysRaw) : null;
+    if (durationDays != null && (!Number.isInteger(durationDays) || durationDays < 1 || durationDays > 3650)) throw new Error("Duration must be a whole number of days.");
+    await saveOption(actor(u), courseId, { id: s(fd, "id") || undefined, label, durationDays, pricePaise: rupeesToPaise(s(fd, "price")),
+      isActive: fd.get("isActive") === "on", sortOrder: Number(s(fd, "sortOrder")) || 0 });
+    return "Price saved. The catalogue and new checkouts use it immediately.";
+  });
+}
+
+export async function deletePriceOptionAction(courseId: string, id: string) {
+  await run("course.pricing", `/admin/courses/${courseId}?tab=pricing`, async (u) => { await deleteOption(actor(u), courseId, id); return "Duration removed."; });
+}
+
+export async function saveTaxAction(fd: FormData) {
+  await run("settings.manage", "/admin/settings", async (u) => {
+    const rate = Number(s(fd, "rate"));
+    if (!Number.isFinite(rate) || rate < 0 || rate > 100) throw new Error("Tax rate must be between 0 and 100%.");
+    await saveTaxSettings(actor(u), { label: s(fd, "label").trim().slice(0, 40) || "Tax", rateBp: Math.round(rate * 100), configured: fd.get("configured") === "on" });
+    return "Tax settings saved.";
   });
 }
 
