@@ -74,14 +74,14 @@ export function Hero() {
             </span>
           </h1>
           <p data-hero-fade className="mt-6 max-w-md text-base leading-relaxed text-fg-2 sm:text-lg">
-            Tierra Academy is a hands-on engineering school for electronics, robotics, IoT, embedded systems, electrical and mechanical engineering — live classes and recorded courses, built by Tierra Automation.
+            Tierra Academy is Tierra Automation's paid training programme in Embedded Systems, IoT, Full Stack Web Development, App Development, Robotics and Prompt Engineering — with live and recorded classes.
           </p>
           <div data-hero-fade className="pointer-events-auto mt-8 flex flex-wrap gap-3">
             <Link href="/courses" className={buttonClass("primary", "lg")}>Explore Courses <Icon name="arrow" size={18} /></Link>
             <Link href="/live" className={buttonClass("secondary", "lg")}><span className="relative mr-1 flex size-2.5"><span className="absolute inline-flex size-full animate-ping rounded-full bg-danger opacity-60" /><span className="relative inline-flex size-2.5 rounded-full bg-danger" /></span>Join Live Classes</Link>
           </div>
           <dl data-hero-fade className="mt-10 grid max-w-md grid-cols-3 gap-4 border-t border-line pt-6">
-            {[["6", "Disciplines"], ["Live + Recorded", "Learning modes"], ["Verifiable", "Certificates"]].map(([v, l]) => (
+            {[["6", "Courses"], ["Live + Recorded", "Learning modes"], ["Tierra", "Certificates"]].map(([v, l]) => (
               <div key={l}><dt className="sr-only">{l}</dt><dd className="font-display text-sm font-semibold sm:text-base">{v}</dd><dd className="text-xs text-muted">{l}</dd></div>
             ))}
           </dl>

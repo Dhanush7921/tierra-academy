@@ -5,7 +5,7 @@ import { Pagination, pageParam, strParam } from "@/components/ui/data";
 import { EmptyState, Input, PageHeader, Select, buttonClass } from "@/components/ui/primitives";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Courses", description: "Browse free and paid engineering courses — live, recorded and hybrid." };
+export const metadata: Metadata = { title: "Courses", description: "Browse Tierra Academy paid courses — live and recorded." };
 
 type SP = Promise<Record<string, string | string[] | undefined>>;
 
@@ -27,7 +27,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: SP }
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       <PageHeader eyebrow="Course catalogue" title={active ? `${active.name} courses` : "All courses"}
-        description={active ? (active.description as string) : "Hands-on engineering courses — free and paid, live and recorded. Filter by discipline, level and format."} />
+        description={active ? (active.description as string) : "Paid, hands-on courses by Tierra Automation — live and recorded. Filter by course, level and format."} />
       <nav aria-label="Disciplines" className="mb-5 flex flex-wrap gap-2">
         <Link href="/courses" className={buttonClass(!f.category ? "primary" : "outline", "sm")}>All</Link>
         {cats.map((c) => (
