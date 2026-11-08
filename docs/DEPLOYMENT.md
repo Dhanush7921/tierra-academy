@@ -32,7 +32,39 @@ The Academy is a **separate repository and deployment**. The existing tierraauto
 | **Supabase Storage** | `SUPABASE_SERVICE_ROLE_KEY` (server only), `STORAGE_PROVIDER=supabase`. |
 | **Upstash** (optional) | `UPSTASH_REDIS_REST_URL/TOKEN` for shared rate limits. |
 
-## 4. Serving at `tierraautomation.in/academy` (later)
+## 4. Production on Railway at `tierraautomation.in/academy` (paid build)
+
+The Academy runs as its **own Railway project** (Next.js service + Postgres), so it can be deployed and rolled back independently of the company site.
+
+1. Railway → New project → Deploy from GitHub `Dhanush7921/tierra-academy`, branch `production-paid` (merge to `main` when approved). Add the **Postgres** template.
+2. Service variables (generate secrets with `openssl rand -base64 48`; never commit them):
+   `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `APP_MODE=production`, `NODE_ENV=production`, `NEXT_PUBLIC_BASE_PATH=/academy`,
+   `NEXT_PUBLIC_APP_URL=https://tierraautomation.in`, `SESSION_SECRET`, `DATA_ENCRYPTION_KEY`, `CRON_SECRET`, `SUPER_ADMIN_SETUP_TOKEN`, `REQUIRE_ADMIN_MFA=true`.
+   Leave `PAYMENTS_PROVIDER`, `LIVE_PROVIDER`, `VIDEO_PROVIDER` unset until real keys exist: checkout and live joining stay closed in production.
+3. Build `npm run build`, start `npm run start`, pre-deploy `npm run db:migrate && npm run db:seed:production`, healthcheck `/academy/api/health`.
+4. Open `https://tierraautomation.in/academy/setup` once with the setup token to create the real Super Admin, then remove `SUPER_ADMIN_SETUP_TOKEN`.
+5. Super Admin → Settings → **Tax & checkout**: enter the tax confirmed by your accountant and tick "final". Checkout opens only when tax is confirmed **and** Razorpay keys + webhook secret are set.
+
+### Company site (Caddy) — the only change needed there
+
+Add this block to the company site's Caddyfile **above** the SPA fallback (`try_files … /index.html` / `file_server`). It keeps the `/academy` prefix (`handle`, not `handle_path`), because the Academy is built with basePath `/academy`:
+
+```caddy
+@academy path /academy /academy/*
+handle @academy {
+	# the Academy sends its own Permissions-Policy (camera/mic only for its live classroom)
+	header -Permissions-Policy
+	reverse_proxy {$ACADEMY_UPSTREAM} {
+		header_up Host {upstream_hostport}
+		header_up X-Forwarded-Host {host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+```
+
+Set `ACADEMY_UPSTREAM=https://<academy-service>.up.railway.app` (or `http://<service>.railway.internal:<PORT>` if both services share a Railway project) on the company service. **Rollback:** remove the block (or unset the variable) and redeploy the company site; the Academy project is untouched. Company DNS is not changed.
+
+## 5. Other hosts for `/academy`
 
 `basePath` is fixed **at build time**, so this needs a separate build:
 

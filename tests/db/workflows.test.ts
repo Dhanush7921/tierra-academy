@@ -41,6 +41,31 @@ describe("free enrollment", () => {
   });
 });
 
+describe("paid pricing: durations, tax and snapshots", () => {
+  it("refuses checkout until tax is confirmed, then charges option fee + tax and snapshots it", async () => {
+    const c = await course("build-a-robotic-arm");
+    const [opt] = await admin`insert into public.course_price_options (course_id, label, duration_days, price_paise) values (${c.id}, '1 Month', 30, 300000) returning id`;
+    await admin`update public.platform_settings set value = ${admin.json({ label: "GST", rateBp: 1800, configured: false })} where key = 'tax'`;
+    expect((await createCheckout(student2, c.id, null, opt.id)).ok).toBe(false);
+    await admin`update public.platform_settings set value = ${admin.json({ label: "GST", rateBp: 1800, configured: true })} where key = 'tax'`;
+    const co = await createCheckout(student2, c.id, null, opt.id);
+    expect(co.ok).toBe(true);
+    if (!co.ok) return;
+    expect(co.amountPaise).toBe(354000);
+    const [o] = await admin`select subtotal_paise, tax_paise, amount_paise, option_label, pricing_snapshot from public.orders where id = ${co.orderId}`;
+    expect([o.subtotal_paise, o.tax_paise, o.amount_paise, o.option_label]).toEqual([300000, 54000, 354000, "1 Month"]);
+    // editing the fee later never changes the historical order
+    await admin`update public.course_price_options set price_paise = 500000 where id = ${opt.id}`;
+    const [after] = await admin`select amount_paise from public.orders where id = ${co.orderId}`;
+    expect(after.amount_paise).toBe(354000);
+    expect((await admin`select price_paise from public.courses where id = ${c.id}`)[0].price_paise).toBe(500000);
+    await admin`delete from public.orders where id = ${co.orderId}`;
+    await admin`delete from public.course_price_options where id = ${opt.id}`;
+    await admin`update public.courses set price_paise = ${c.price_paise} where id = ${c.id}`;
+    await admin`update public.platform_settings set value = ${admin.json({ label: "Tax", rateBp: 0, configured: true })} where key = 'tax'`;
+  });
+});
+
 describe("paid checkout + verified webhooks", () => {
   it("keeps the course locked until a verified payment event", async () => {
     const c = await course("build-a-robotic-arm");

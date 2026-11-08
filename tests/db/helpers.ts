@@ -16,6 +16,11 @@ export async function resetDb() {
   const { seed } = await import("../../scripts/seed");
   await migrate(TEST_DB, { reset: true, quiet: true });
   await seed(TEST_DB, { quiet: true });
+  // Checkout requires a confirmed tax setup; 0% keeps the amount assertions in paise exact.
+  const db = postgres(TEST_DB, { max: 1, onnotice: () => {} });
+  await db`insert into public.platform_settings (key, value) values ('tax', ${db.json({ label: "Tax", rateBp: 0, configured: true })})
+    on conflict (key) do update set value = excluded.value`;
+  await db.end();
 }
 
 export const admin = postgres(TEST_DB, { max: 2, onnotice: () => {} });
