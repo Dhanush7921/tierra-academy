@@ -1,3 +1,20 @@
+# Project status
+
+## Paid production build — 2026-11-08 (branch `production-paid`)
+
+| Area | Status |
+|---|---|
+| Six paid courses | Seeded by `npm run db:seed:production`: Embedded Systems, IoT, Full Stack Web, App Development, Prompt Engineering (1 Month ₹3,000 · 45 Days ₹4,500), Robotics (1 Month ₹6,000; 45-day fee not confirmed, so not created). Fees exclude tax. |
+| Pricing editor | Admin → Course → Pricing: add/edit/disable/remove durations, live subtotal · tax · payable. Super Admin only (RLS + server check); every change audited. Catalogue "from" price syncs automatically. |
+| Tax | Admin → Settings → Tax & checkout. No rate is assumed; checkout stays closed until the Super Admin confirms the tax setup. |
+| Orders | Pricing snapshot (option, duration, subtotal, discount, tax rate/amount, total) stored on every order; later fee edits don't change past orders (tested). |
+| Paid-only | Free self-enrollment disabled in production. Checkout needs confirmed tax **and** Razorpay keys + webhook secret; until then course pages show "Enrollment opens soon". |
+| Demo content | Production mode shows no demo banner and seeds no demo users, ratings, transactions or certificates. The simulated classroom and demo payments are refused in production. |
+| Light theme | Fixed: theme restored before first paint (no flash, survives navigation); showcase toggle now works. Light palette verified on public, student and admin pages, desktop and mobile. |
+| Verification | GitHub Actions: npm install, typecheck, unit + DB tests, `next build` with basePath `/academy`, production smoke test (all routes 200, auth redirects, fees shown, checkout closed, no demo banner, CSS under /academy). |
+| Hosting | **Blocked**: Railway trial expired (plan needed). Company site repo/Railway project not accessible from this session. See `docs/DEPLOYMENT.md` §4 for the exact Railway + Caddy steps. |
+| Providers | Razorpay, Zoom, Cloudflare Stream, Resend: code ready, keys not configured, so those features stay disabled in production. |
+
 # PROJECT_STATUS — Tierra Academy
 
 _Last updated: 3 Nov 2026_
