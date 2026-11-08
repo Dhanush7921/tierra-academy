@@ -1,17 +1,18 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { Unbounded, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { DemoBanner } from "@/components/ui/demo-banner";
 
-const display = Unbounded({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-unbounded", display: "swap" });
-const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-plex", display: "swap" });
-const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-plex-mono", display: "swap" });
+// Self-hosted (variable) fonts: no build-time or runtime dependency on Google Fonts.
+const display = localFont({ src: "./fonts/Unbounded.ttf", weight: "200 900", variable: "--font-unbounded", display: "swap" });
+const sans = localFont({ src: "./fonts/PlexSans.ttf", weight: "100 700", variable: "--font-plex", display: "swap" });
+const mono = localFont({ src: [{ path: "./fonts/PlexMono.ttf", weight: "400" }, { path: "./fonts/PlexMono-Medium.ttf", weight: "500" }], variable: "--font-plex-mono", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: { default: "Tierra Academy — Learn. Build. Automate.", template: "%s · Tierra Academy" },
-  description: "Tierra Academy by Tierra Automation: live and recorded engineering courses in electronics, robotics, IoT, embedded systems, electrical and mechanical engineering.",
+  description: "Tierra Academy by Tierra Automation: live and recorded training in Embedded Systems, IoT, Full Stack Web Development, App Development, Robotics and Prompt Engineering.",
   applicationName: "Tierra Academy",
   openGraph: { type: "website", siteName: "Tierra Academy", title: "Tierra Academy — Learn. Build. Automate.", images: ["/brand/tierra-automation-logo-512.webp"] },
   robots: process.env.APP_MODE === "production" ? undefined : { index: false, follow: false },
